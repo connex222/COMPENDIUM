@@ -1,24 +1,24 @@
-# COMPENDIUM
+# The Compendium
 
-## Purpose
-Purpose not yet verified. The root index.html file returned no readable content during this audit.
+Seven puzzle volumes in one place, including Causeway (word ladder), Reckoner (number grid), Skein (word snake) and Winnow (categories).
 
-## Status
-**Retained — status pending verification.** This repository is not approved for deletion, archiving, merging or renaming.
+**Open it:** https://connex222.github.io/COMPENDIUM/
 
-## How to run
-Local run instructions cannot yet be verified. The root `index.html` returned no readable content through the audit. Confirm source files and intended launch process before running or publishing.
+## How to use it
 
-## Maintenance information
-- Default branch: `main`.
-- Live URL and deployment settings: not verified in this documentation pass.
-- Release/acceptance state: not independently verified.
-- Licensing: needs owner review; no reuse licence is implied.
+1. Open the link above in Chrome, Edge or Safari, on a phone, tablet or computer.
+2. On a phone, use the browser's **Add to Home Screen** option to keep it one tap away.
 
-## Safety
-Created on a dedicated documentation review branch. No gameplay, application files, existing workflows, deployment configuration or main branch are changed. Obtain explicit owner approval before any merge, rename, archive or deletion.
+Or download `index.html` and open it straight from your device. Everything is in that one file.
 
-## Remaining checks
-- Verify the latest deployed version, if any.
-- Confirm dependencies, setup and automated tests.
-- Record current project ownership and intended status.
+## Saving
+
+Your progress and theme are saved on the device you play on. Your data is not sent anywhere. Clearing the browser's data deletes it.
+
+## Made by
+
+Shaun Ellison ([portfolio](https://connex222.github.io)).
+
+## For developers and AI assistants
+
+See `CLAUDE.md` for the build rules.
