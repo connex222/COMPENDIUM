@@ -51,7 +51,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .plate h1{font-family:var(--display);font-weight:800;
  font-size:clamp(30px,9.4vw,44px);letter-spacing:.12em;line-height:1.05;
  text-transform:uppercase;margin-bottom:14px}
-.plate p{font-size:13.5px;color:var(--muted);max-width:30ch;margin:0 auto;line-height:1.6}
+.plate p{font-size:13.5px;color:var(--muted);max-width:44ch;margin:0 auto;line-height:1.6}
 .orn{display:flex;align-items:center;justify-content:center;gap:11px;margin:16px 0 0}
 .orn i{display:block;height:1px;width:54px;background:var(--rule-strong)}
 .orn span{font-size:15px;color:var(--v1);opacity:.8;line-height:1}
@@ -74,7 +74,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .vol.soon{opacity:.4;box-shadow:none}
 .vol.soon .tag{background:none;border:1px solid var(--rule-strong);color:var(--faint)}
 
-.foot{padding:0 24px 34px;text-align:center;font-size:11.5px;color:var(--faint);line-height:1.7}
+.foot{padding:0 24px 34px;text-align:center;font-size:11.5px;color:var(--muted);line-height:1.7}
+.sibling{display:inline-block;margin-top:15px;padding:12px 4px;min-height:44px;color:var(--v1);font-size:13px;text-underline-offset:3px}
 
 #stage{position:fixed;inset:0;background:var(--ground);opacity:0;pointer-events:none;
  transition:opacity .28s;z-index:20}
@@ -93,11 +94,11 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
   <div class="scroll">
     <div class="plate">
       <h1>Compendium</h1>
-      <p>Word and number puzzles. No adverts, no accounts, nothing behind a paywall.</p>
+      <p>Seven classic puzzles: words, deduction, numbers and codes. All free, with no accounts or adverts.</p>
       <div class="orn"><i></i><span>&#10087;</span><i></i></div>
     </div>
     <div class="vols" id="vols"></div>
-    <div class="foot">Everything is stored on this device only.<br>Nothing is sent anywhere.</div>
+    <div class="foot">Progress stays in this browser; clearing browser data removes saves.<br><a class="sibling" href="https://connex222.github.io/COMPENDIUM-2/" rel="noopener">Compendium II: nine different puzzles (online)</a></div>
   </div>
 </section>
 
@@ -127,16 +128,33 @@ $('#theme-btn').onclick = () => {
   applyTheme(theme);
 };
 
-/* ---------- volume list ---------- */
-$('#vols').innerHTML = VOLS.map((v,i) => `
-  <button class="vol${v.has?'':' soon'}" data-i="${i}" ${v.has?'':'disabled'}
-          style="--tint:var(--${v.tint})">
-    <span class="num">${v.num}</span>
-    <span class="body"><strong>${v.name}</strong><small>${v.blurb}</small></span>
-    <span class="tag">${v.has?'Play':'Soon'}</span>
-  </button>`).join('');
-document.querySelectorAll('.vol').forEach(b =>
-  b.addEventListener('click', () => openVolume(VOLS[+b.dataset.i].name)));
+/* Read-only collection status; existing save keys are never renamed. */
+function saved(k){ try{ const v=localStorage.getItem(k); return v===null?null:JSON.parse(v); }catch(e){return null;} }
+function statusFor(n){
+  const s=saved('cmp.v1.'+n.toLowerCase()+'.session');
+  if(s?.v===1) return s.finished||s.over||s.done?'Played':'Continue';
+  if(n==='Longhand'){
+    const a=saved('lh.daily'),b=saved('lh.practice');
+    if((a&&!a.done)||(b&&!b.done))return 'Continue';
+    if(a?.done||b?.done)return 'Played';
+  }
+  if(n==='Cyphr'){
+    const v=saved('cyphr');
+    if(v?.prog&&Object.values(v.prog).some(p=>p&&Object.keys(p).length))return 'Continue';
+    if(v?.done&&Object.values(v.done).some(Boolean))return 'Played';
+  }
+  return n==='Unpick'&&saved('unpick.v1')?.solved>0?'Played':'Play';
+}
+function renderRoll(){
+  $('#vols').innerHTML=VOLS.map((v,i)=>`
+    <button class="vol${v.has?'':' soon'}" data-i="${i}" ${v.has?'':'disabled'} style="--tint:var(--${v.tint})">
+      <span class="num">${v.num}</span>
+      <span class="body"><strong>${v.name}</strong><small>${v.blurb}</small></span>
+      <span class="tag">${v.has?statusFor(v.name):'Soon'}</span>
+    </button>`).join('');
+  document.querySelectorAll('.vol').forEach(b=>b.addEventListener('click',()=>openVolume(VOLS[+b.dataset.i].name)));
+}
+renderRoll();
 
 /* ---------- mounting a volume ----------
    Each volume is written into the iframe as a whole document. Same origin, so
@@ -152,56 +170,46 @@ function insets(){
   return out;
 }
 
-let current = null;
-
-function openVolume(name){
-  const html = DOCS[name];
-  if (!html) return;
-  const ins = insets();
-
-  // A fresh iframe every time. Writing a second document into an existing one
-  // keeps the previous window's globals alive, and since every volume declares
-  // `const DATA`, `const S` and so on, the second volume's script would die on
-  // a redeclaration and the puzzle would mount but never run.
-  const stage = $('#stage');
-  stage.innerHTML = '';
-  const frame = document.createElement('iframe');
-  frame.id = 'frame';
-  frame.title = name;
-  stage.appendChild(frame);
-
-  const d = frame.contentDocument;
-  d.open();
-  d.write(html);
-  d.close();
-  // env() does not resolve inside the iframe, so hand it the measured values
-  const fonts = d.createElement('style');
-  fonts.textContent = FONTCSS;
-  d.head.appendChild(fonts);
-  const fix = d.createElement('style');
-  fix.textContent = `:root{--safe-top:${ins.top};--safe-bot:${ins.bot}}`;
-  d.head.appendChild(fix);
-  // keep the volume on whatever theme the shell is showing
-  d.body.dataset.theme = readTheme();
-
-  current = name;
-  $('#stage').classList.add('on');
-  $('#home').classList.add('hide');
-  history.pushState({v:name}, '', '#'+name.toLowerCase());
+let current=null, stageRevision=0;
+function volumeByHash(){
+  const slug=decodeURIComponent(location.hash.slice(1)).toLowerCase();
+  return VOLS.find(v=>v.has&&v.name.toLowerCase()===slug)?.name||null;
 }
-
+function openVolume(name,push=true){
+  if(!DOCS[name]||current===name)return;
+  stageRevision++;
+  const stage=$('#stage'),ins=insets();
+  stage.innerHTML='';
+  const frame=document.createElement('iframe');
+  frame.id='frame';frame.title=name;stage.appendChild(frame);
+  const d=frame.contentDocument;d.open();d.write(DOCS[name]);d.close();
+  const fonts=d.createElement('style');fonts.textContent=FONTCSS;d.head.appendChild(fonts);
+  const fix=d.createElement('style');fix.textContent=`:root{--safe-top:${ins.top};--safe-bot:${ins.bot}}`;d.head.appendChild(fix);
+  d.body.dataset.theme=readTheme();
+  current=name;stage.classList.add('on');$('#home').classList.add('hide');
+  if(push)history.pushState({cmpVolume:name},'','#'+name.toLowerCase());
+}
 function home(){
-  $('#stage').classList.remove('on');
-  $('#home').classList.remove('hide');
-  setTimeout(() => { $('#stage').innerHTML = ''; }, 300);  // stop timers, free it
-  current = null;
-  // a volume may have changed the theme while it was open
-  theme = readTheme();
-  applyTheme(theme);
+  current=null;
+  const revision=++stageRevision;
+  $('#stage').classList.remove('on');$('#home').classList.remove('hide');
+  setTimeout(()=>{if(stageRevision===revision&&!current)$('#stage').innerHTML='';},300);
+  theme=readTheme();applyTheme(theme);renderRoll();
 }
-
-window.addEventListener('message', e => { if (e.data === 'cmp:home') { history.back(); } });
-window.addEventListener('popstate', () => { if (current) home(); });
+function syncRoute(){
+  const name=volumeByHash();
+  if(name&&name!==current)openVolume(name,false);
+  else if(!name&&current)home();
+}
+window.addEventListener('message',e=>{
+  const f=$('#frame');
+  if(e.data!=='cmp:home'||!f||e.source!==f.contentWindow)return;
+  if(history.state?.cmpVolume===current)history.back();
+  else{history.replaceState(null,'',location.pathname+location.search);home();}
+});
+window.addEventListener('popstate',syncRoute);
+window.addEventListener('hashchange',syncRoute);
+if(volumeByHash())syncRoute();
 </script>
 </body>
 </html>
