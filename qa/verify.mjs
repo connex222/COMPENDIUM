@@ -77,5 +77,21 @@ assert.equal(status("Cyphr"),"Continue");checks++;
 set("c2.v.fell.state",{v:1,d:{correct:true}});
 assert.equal(status("Reckoner"),"Play","Sequel data cannot change original status");checks++;
 assert.deepEqual(JSON.parse(map.get("c2.v.fell.state")),{v:1,d:{correct:true}});
+// Corrupted or unrelated saved data must not crash launcher status detection.
+// These run against the extracted production statusFor, without modifying storage.
+map.set("cmp.v1.causeway.session","{broken json");
+assert.equal(status("Causeway"),"Play","Malformed Causeway save must degrade safely");checks++;
+map.delete("cmp.v1.causeway.session");
+map.set("cmp.v1.winnow.session","{broken json");
+assert.equal(status("Winnow"),"Play","Malformed Winnow save must degrade safely");checks++;
+map.delete("cmp.v1.winnow.session");
+map.set("lh.daily","{broken json");
+assert.equal(status("Longhand"),"Play","Malformed Longhand save must degrade safely");checks++;
+map.delete("lh.daily");
+map.set("cyphr","{broken json");
+assert.equal(status("Cyphr"),"Play","Malformed Cyphr save must degrade safely");checks++;
+map.delete("cyphr");
+assert.deepEqual(JSON.parse(map.get("c2.v.fell.state")),{v:1,d:{correct:true}},"Sequel sentinel survives corrupted-save checks");
+
 console.log("PASS: 7 original volumes, 8 scripts, original save-key contracts, "+checks+" status scenarios.");
 console.log("Reminder: static checks do not prove browser end-to-end solves.");
