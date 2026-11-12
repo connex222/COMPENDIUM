@@ -1,6 +1,6 @@
 # THE COMPENDIUM — original-focus audit and release gate
 
-Branch: `improvement/compendium-original-focus`. Review-only. No merge, deploy, migration, key rename, or deletion authorised.
+Release: approved merge of `improvement/compendium-original-focus` into `main` on 12 November 2026 (PR #2, merge commit `5f58308`). The original and sequel remain separate. No player-data migration, key rename or deletion authorised.
 
 ## Verified architecture and identity
 
@@ -78,4 +78,4 @@ GitHub Actions [run #14](https://github.com/connex222/COMPENDIUM/actions/runs/43
 
 ## Release decision
 
-**HOLD — not approved to merge/deploy.** Branch-specific Chromium browser and static test evidence is now green. Obtain mobile/Android, Safari and corrupted-state results, then explicit owner approval. This audit document is non-destructive and contains no player-data migration.
+**MERGED WITH OWNER APPROVAL — GitHub PR #2.** GitHub Actions run #17 passed 21 Chromium browser checks and 18 saved-state scenarios. GitHub Pages is configured/documented to publish from `main`, but the live page could not be independently reached from this environment, so live deployment verification remains **unconfirmed**. Safari iOS, Android WebView, fuller corrupted-input scenarios and real-player evaluation remain open acceptance follow-ups. No player-data migration was performed.
