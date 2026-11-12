@@ -83,13 +83,18 @@ try{
  assert.equal(await keyboardCell.getAttribute("aria-pressed"),"true","Reckoner supports keyboard cell selection");
  // Entering a duplicate in a row should explain a conflict, not silently fail.
  const duplicate=await focusGame.evaluate(()=>{
-   for(const [r,c,v] of S.p.g)for(let other=0;other<S.p.n;other++)
-     if(other!==c&&!isGiven(r,other))return {r,c:other,v};
+   for(let r=0;r<S.p.n;r++){
+     const editable=[];
+     for(let c=0;c<S.p.n;c++)if(!isGiven(r,c))editable.push(c);
+     if(editable.length>=2)return {r,c1:editable[0],c2:editable[1],v:1};
+   }
    return null;
  });
- assert.ok(duplicate,"Reckoner puzzle has an editable row peer");
- await f().locator('#board .cell[data-r="'+duplicate.r+'"][data-c="'+duplicate.c+'"]').click();
- await f().locator('#pad-row .num[data-v="'+duplicate.v+'"]').click();
+ assert.ok(duplicate,"Reckoner puzzle has two editable cells in a row");
+ for(const c of [duplicate.c1,duplicate.c2]){
+   await f().locator('#board .cell[data-r="'+duplicate.r+'"][data-c="'+c+'"]').click();
+   await f().locator('#pad-row .num[data-v="'+duplicate.v+'"]').click();
+ }
  assert.match(await f().locator("#constraint-guide").innerText(),/rule conflicts/,"Reckoner explicitly reports duplicate conflict");
  await back();
  checks.push("Causeway Escape, Winnow focus/selection semantics and Reckoner keyboard selection");
