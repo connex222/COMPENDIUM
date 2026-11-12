@@ -42,7 +42,7 @@ The sequel's canonical nine: **Fell, Mirrorwork, Riffle, Glean, Bight, Marquetry
 3. Refreshing `#causeway`, `#winnow`, etc. restores the corresponding iframe. Browser back, the in-game return control and rapid reopen have safer route/cleanup handling. No old route was deleted.
 4. **Causeway:** new versioned snapshot validates selected puzzle, every rung's vocabulary/adjacency, elapsed time and typed word; saves on input, clock ticks and navigation.
 5. **Winnow:** saves exact selected board/shuffle, solved groups, mistakes, remaining tiles and guesses. Recovery validates four-group membership and does not grant extra mistakes.
-6. **Skein:** saves board index, solved threads, hint and clock state, validating original theme/word supply before restoration.
+6. **Skein:** saves board index, solved threads, hint and clock state, validating original theme/word supply before restoration. The grid now supports accessible arrow-key navigation, Space to select letters, Enter to submit, Escape to cancel, roving focus and spoken letter/selection labels.
 7. **Reckoner:** saves selected board index, entries, pencil marks, checks and clock. Every given clue is validated before restore; invalid records are ignored, not erased.
 8. **Unpick:** saves daily/practice partial letters, clue, selected position and hints in a separate record; existing `unpick.v1` stats remain untouched. The mini-game is outside this addition.
 9. Added dependency-free source checks and review-only Chromium tests. The workflow cannot publish the site.
@@ -53,9 +53,11 @@ This change **does not** migrate historical saves or attempt to merge the two ga
 
 Run `node qa/verify.mjs` (source, seven-game catalogue, script parse, key isolation and synthetic status scenarios). For browser QA install `playwright-core` outside the shipped game and run `node qa/browser.mjs` with `CHROME_BIN` set. GitHub Actions definition: `.github/workflows/compendium-original-qa.yml`.
 
-Browser QA explicitly exercises open/URL refresh/return for all seven, selected real in-game input/refresh/restore for Causeway, Winnow, Reckoner and Skein, complete Causeway and Winnow UI solves, and an untouched `c2.` sentinel. It does **not** yet constitute end-to-end solves for all seven. Remaining acceptance before merge: full UI solve/results/refresh for **Unpick, Longhand, Reckoner, Skein and Cyphr**; keyboard and touch focus/selection/invalid action checks; real Safari iOS, Android/WebView, and offline local-file checks; daily boundaries, completed-game summary and deliberate new-game actions. Check the source's versioned session validation against corrupted saves and storage-disabled scenarios in a browser.
+**Confirmed passing review-only GitHub Actions:** [Run 43244487763](https://github.com/connex222/COMPENDIUM/actions/runs/43244487763). The independent static suite passed the seven-puzzle catalogue, all eight JavaScript source parses, save-key isolation and **14 synthetic progress/status scenarios**. The actual Chromium browser suite passed **20 checks**, including opening, refreshing and returning from every original volume; the versioned progress recovery paths; **a real completed UI solve in each of the seven games**; a genuine Skein keyboard-selected word; and an untouched Compendium II `c2.` sentinel. These results confirm browser E2E on Chromium, not every operating system or input combination.
 
-**Do not claim 7/7 completion acceptance until those checks pass.** Successful static JavaScript parsing is not a substitute for a browser playthrough.
+**Remaining manual/mobile release gate:** iOS Safari and Android WebView touch/layout/refresh, physical keyboard and switch access, invalid input and corrupted-session edge cases, storage-disabled and local-file operation, independent Unpick/Longhand saved-key compatibility, daily date rollover, and repeated starts/finishes with existing user progress. The original and sequel were not jointly opened against production user data. No user telemetry was collected, so ranked engagement remains editorial.
+
+**Approval gate:** Do not merge or deploy until these tests have been reviewed and the owner explicitly authorises a merge. Migration/deletion continues to require its own separate approval.
 
 ## Future consolidation/migration proposal — REQUIRES A SEPARATE APPROVAL
 
