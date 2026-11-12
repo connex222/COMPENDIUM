@@ -236,6 +236,30 @@ try{
  assert.equal(await page.locator(".sibling").getAttribute("href"),"https://connex222.github.io/COMPENDIUM-2/");
  checks.push("Sequel has a separate, explicit, opt-in link");
 
+
+ // Skein accessibility: the same puzzle can be played without pointer dragging.
+ await open("Skein");game=await frame();
+ await f().locator("#go").click();
+ const keyboardWord=await game.evaluate(()=>({n:S.p.n,word:S.spans[0].w,cells:S.spans[0].cells}));
+ assert.ok(keyboardWord.cells.length>=3);
+ let previous=keyboardWord.cells[0];
+ await f().locator('#cells .cell[data-i="'+previous+'"]').focus();
+ await page.keyboard.press("Space");
+ for(const next of keyboardWord.cells.slice(1)){
+  let r=Math.floor(previous/keyboardWord.n),c=previous%keyboardWord.n;
+  const destR=Math.floor(next/keyboardWord.n),destC=next%keyboardWord.n;
+  while(c<destC){await page.keyboard.press("ArrowRight");c++;}
+  while(c>destC){await page.keyboard.press("ArrowLeft");c--;}
+  while(r<destR){await page.keyboard.press("ArrowDown");r++;}
+  while(r>destR){await page.keyboard.press("ArrowUp");r--;}
+  await page.keyboard.press("Space");
+  previous=next;
+ }
+ await page.keyboard.press("Enter");
+ assert.equal(await game.evaluate(w=>S.found.has(w),keyboardWord.word),true,"Skein keyboard word solved");
+ checks.push("Skein: roving grid focus, arrow navigation, Space tracing and Enter submission");
+ await back();
+
  assert.deepEqual((await key("c2.v.fell.state")).d,{sentinel:"DO-NOT-TOUCH"});
  assert.deepEqual(errors,[],"No console page errors in any volume");
  console.log("PASS: "+checks.length+" browser checks\n"+checks.map(x=>"  - "+x).join("\n"));
