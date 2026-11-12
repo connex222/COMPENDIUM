@@ -55,6 +55,32 @@ try{
  assert.deepEqual((await key("c2.v.fell.state")).d,{sentinel:"DO-NOT-TOUCH"});
  checks.push("Compendium II saved-state isolation");
 
+ // Focused control regression checks on the original three flagship candidates.
+ await roll();await open("Causeway");let focusGame=await frame();
+ await focusGame.evaluate(()=>start(false));
+ await f().locator('#kb .key[data-k="a"]').click();
+ await page.keyboard.press("Escape");
+ assert.equal(await focusGame.evaluate(()=>S.typed),"","Causeway Escape clears unfinished text");
+ await back();
+ await open("Winnow");focusGame=await frame();
+ await focusGame.evaluate(()=>start(false));
+ const word=await focusGame.evaluate(()=>S.order[0].w);
+ const tile=f().locator('#grid .tile').filter({hasText:new RegExp("^"+word+"$")});
+ await tile.focus();
+ await page.keyboard.press("Space");
+ assert.equal(await tile.getAttribute("aria-pressed"),"true","Winnow announces selection");
+ assert.equal(await tile.evaluate(el=>document.activeElement===el),true,"Winnow restores focus after re-render");
+ await back();
+ await open("Reckoner");focusGame=await frame();
+ await focusGame.evaluate(()=>start(false));
+ const editableCell=await focusGame.evaluate(()=>{for(let r=0;r<S.p.n;r++)for(let c=0;c<S.p.n;c++)if(!isGiven(r,c))return {r,c};});
+ const keyboardCell=f().locator('#board .cell[data-r="'+editableCell.r+'"][data-c="'+editableCell.c+'"]');
+ await keyboardCell.focus();
+ await page.keyboard.press("Enter");
+ assert.equal(await keyboardCell.getAttribute("aria-pressed"),"true","Reckoner supports keyboard cell selection");
+ await back();
+ checks.push("Causeway Escape, Winnow focus/selection semantics and Reckoner keyboard selection");
+
  // Causeway: typed letter, interruption, then a genuine solution through virtual keys.
  await roll();await open("Causeway");
  let game=await frame();
