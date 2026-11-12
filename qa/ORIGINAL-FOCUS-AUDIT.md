@@ -66,6 +66,16 @@ For cross-product navigation: original to sequel should be an explicit ordinary 
 4. Test backup/export and rollback on Chromium, Safari and Android; include corrupt saves, partial exports, interrupted imports and repeated imports.
 5. Obtain separate written approval for the exact migration mapping, UI, release and rollback plan. Never delete the originals until a retention/rollback decision is authorised.
 
+## Classic flagship polish — development branch only (12 November 2026)
+
+After the successful initial seven-puzzle acceptance run, three non-destructive UI improvements were implemented in the original embedded volume documents:
+
+- **Causeway:** a persistent sentence explains the shortest known remaining route and warns if the current word has no route forward. The existing word validation, puzzle pool, clock, hint cost and save keys are unchanged.
+- **Winnow:** an explicit selection counter (0–4) and completed-group counter (0–4) provide visual and screen-reader progress. Tile names, ranks, random order, lives, penalties and result logic are unchanged.
+- **Reckoner:** a progress/constraint sentence reports filled cells and rule-conflict cells; this does not reveal correct numbers or alter deduction rules. Existing check actions retain their original cost.
+
+GitHub Actions [run #14](https://github.com/connex222/COMPENDIUM/actions/runs/43251891548), from the PR review of commit `f93c964`, completed successfully: **18 saved-state scenarios**, **21 browser checks**, all **7 original puzzles**. The latest browser test asserts the visible feedback for Causeway, Winnow and Reckoner in addition to the full solve/resume suite. Headless Chromium evidence does not replace real Safari/Android testing, user research or a full corrupted-state matrix.
+
 ## Release decision
 
 **HOLD — not approved to merge/deploy.** Branch-specific Chromium browser and static test evidence is now green. Obtain mobile/Android, Safari and corrupted-state results, then explicit owner approval. This audit document is non-destructive and contains no player-data migration.
