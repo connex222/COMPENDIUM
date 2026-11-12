@@ -169,8 +169,75 @@ try{
  checks.push("Unpick: interrupted answer, real daily solve and existing statistics");
  await back();
 
+
+ // Longhand: calculate the deterministic daily answer from its own bundled deck,
+ // then enter the answer exclusively using the on-screen keyboard.
+ await open("Longhand");game=await frame();
+ const docs=JSON.parse(html.toString("utf8").match(/^const DOCS = (.+);$/m)[1]);
+ const marker="const ANSWERS = "+String.fromCharCode(96);
+ const begin=docs.Longhand.indexOf(marker);
+ const end=docs.Longhand.indexOf(String.fromCharCode(96)+'.split("\\n")',begin);
+ assert.ok(begin>0&&end>begin,"Longhand daily word list present");
+ const answers=docs.Longhand.slice(begin+marker.length,end).split("\n");
+ const epoch=Date.UTC(2026,7,12),now=new Date();
+ const day=Math.floor((Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())-epoch)/86400000)+1;
+ const dailyAnswer=answers[((day-1)%answers.length+answers.length)%answers.length];
+ assert.match(dailyAnswer,/^[a-z]{7}$/,"Longhand has valid deterministic daily answer");
+ await f().locator("#t-play").click();
+ await f().locator("#kb .key[data-k]").first().waitFor({timeout:20000});
+ await page.waitForTimeout(700);
+ if(await f().locator("#scrim").evaluate(e=>e.classList.contains("open")))
+  await f().locator('#sheet [data-close]').click();
+ await f().locator('#kb .key[data-k="'+dailyAnswer[0]+'"]').click();
+ assert.equal((await key("lh.daily"))?.cur?.[0],dailyAnswer[0]);
+ await page.reload({waitUntil:"domcontentloaded"});
+ await f().locator("#t-play").click();
+ await f().locator("#kb .key[data-k]").first().waitFor({timeout:20000});
+ await page.waitForTimeout(650);
+ if(await f().locator("#scrim").evaluate(e=>e.classList.contains("open")))
+  await f().locator('#sheet [data-close]').click();
+ assert.equal((await key("lh.daily"))?.cur?.[0],dailyAnswer[0],"Longhand restores typed entry");
+ for(const letter of dailyAnswer.slice(1))await f().locator('#kb .key[data-k="'+letter+'"]').click();
+ await f().locator('#kb .key[data-k="enter"]').click();
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem("lh.daily")||"null")?.won===true,null,{timeout:15000});
+ await page.reload({waitUntil:"domcontentloaded"});
+ assert.equal((await key("lh.daily")).won,true,"Longhand solved result survives refresh");
+ checks.push("Longhand: saved daily input, actual keyboard solve and restored result");
+ await back();
+
+ // Cyphr: real cell-to-keyboard number mapping, recovery and full completion.
+ await open("Cyphr");game=await frame();
+ if(await f().locator("#guideSheet").evaluate(e=>e.classList.contains("on")))
+  await f().locator("#guideClose").click();
+ await f().locator("#plist .plink").first().click();
+ const cipher=await game.evaluate(()=>({mapping:cur.k,given:{...given}}));
+ assert.ok(Object.keys(cipher.mapping).length>0,"Cyphr letter map exists");
+ const codes=Object.keys(cipher.mapping).filter(n=>!Object.prototype.hasOwnProperty.call(cipher.given,n));
+ assert.ok(codes.length,"Cyphr has numbers to resolve");
+ const first=codes[0],letter=cipher.mapping[first];
+ await f().locator('#board .cell[data-num="'+first+'"]').first().click();
+ await f().locator('#pad .key[data-l="'+letter+'"]').click();
+ assert.equal((await key("cyphr"))?.prog?.["1:standard"]?.[first],letter,"Cyphr saves number mapping");
+ await page.reload({waitUntil:"domcontentloaded"});
+ game=await frame();
+ if(await f().locator("#guideSheet").evaluate(e=>e.classList.contains("on")))await f().locator("#guideClose").click();
+ await f().locator("#plist .plink").first().click();
+ assert.equal(await game.evaluate(n=>assign[n],first),letter,"Cyphr restores number mapping");
+ for(const n of codes.slice(1)){
+  await f().locator('#board .cell[data-num="'+n+'"]').first().click();
+  await f().locator('#pad .key[data-l="'+cipher.mapping[n]+'"]').click();
+ }
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem("cyphr")||"null")?.done?.["1:standard"]===true,null,{timeout:15000});
+ await page.reload({waitUntil:"domcontentloaded"});
+ assert.equal((await key("cyphr")).done["1:standard"],true,"Cyphr solved record survives refresh");
+ checks.push("Cyphr: number assignments, reload, full solution and results");
+ await back();
+
+ assert.equal(await page.locator(".sibling").getAttribute("href"),"https://connex222.github.io/COMPENDIUM-2/");
+ checks.push("Sequel has a separate, explicit, opt-in link");
+
  assert.deepEqual((await key("c2.v.fell.state")).d,{sentinel:"DO-NOT-TOUCH"});
  assert.deepEqual(errors,[],"No console page errors in any volume");
  console.log("PASS: "+checks.length+" browser checks\n"+checks.map(x=>"  - "+x).join("\n"));
- console.log("Coverage limit: Unpick, Longhand, Cyphr and Skein/Reckoner still need full UI-solve E2E.");
+ console.log("Coverage limit: Safari iOS, Android WebView, invalid input and standalone repository compatibility still need manual QA.");
 }finally{await browser?.close();await new Promise(r=>server.close(r));}
