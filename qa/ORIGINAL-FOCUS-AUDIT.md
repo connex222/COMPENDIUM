@@ -44,7 +44,9 @@ Inspected:
 - `qa/browser.mjs` specifies opening, refreshing and leaving all seven; completion-and-recovery paths for Causeway, Winnow, Reckoner, Skein, Unpick, Longhand and Cyphr; basic keyboard tracing in Skein; and a sequel key sentinel.
 - The branch browser script requires a local Chrome/Chromium binary and `playwright-core`.
 
-**Not established by this review:** that the test suite has actually run green on the current branch; Playwright execution on a device/browser; Android/WebView acceptance; Safari and iOS behaviour; all malformed save payloads; the full invalid-input matrix; or real player-based engagement rankings. Code containing tests is not evidence of passing tests. Mark full P0 browser acceptance **pending** until CI or reproducible local test logs are attached.
+**Confirmed CI evidence:** GitHub Actions review run [#7](https://github.com/connex222/COMPENDIUM/actions/runs/43246147986), job `original-seven` (12 November 2026), completed **successfully**: `node qa/verify.mjs` passed 7 original volumes, 8 scripts and **14 save/status scenarios**; `node qa/browser.mjs` passed **20 Chromium checks**. These cover actual completion and refresh restoration across all seven, original-to-sequel link presence, keyboard tracing in Skein and a `c2.` saved-data sentinel. The runner used Node 24.22.2 and Chrome headless. This is real test execution, not just inspection of test source.
+
+**Still not established:** Android/WebView acceptance; Safari and iOS behaviour; all malformed save payloads; complete invalid-input coverage; live cross-product return navigation; or measured player engagement. CI is green for its stated scope but the full P0 acceptance matrix remains **partially open**.
 
 ### Required acceptance matrix
 
@@ -66,4 +68,4 @@ For cross-product navigation: original to sequel should be an explicit ordinary 
 
 ## Release decision
 
-**HOLD — not approved to merge/deploy.** Obtain passing branch-specific browser test evidence, mobile/Android and corrupted-state results, and explicit owner approval. This audit document is non-destructive and contains no player-data migration.
+**HOLD — not approved to merge/deploy.** Branch-specific Chromium browser and static test evidence is now green. Obtain mobile/Android, Safari and corrupted-state results, then explicit owner approval. This audit document is non-destructive and contains no player-data migration.
