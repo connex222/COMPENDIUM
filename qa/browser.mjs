@@ -58,6 +58,7 @@ try{
  // Focused control regression checks on the original three flagship candidates.
  await roll();await open("Causeway");let focusGame=await frame();
  await focusGame.evaluate(()=>start(false));
+ assert.match(await f().locator("#crossing-guide").innerText(),/valid step|One valid change|blocked/i,"Causeway explains remaining steps");
  await f().locator('#kb .key[data-k="a"]').click();
  await page.keyboard.press("Escape");
  assert.equal(await focusGame.evaluate(()=>S.typed),"","Causeway Escape clears unfinished text");
@@ -68,6 +69,7 @@ try{
  const tile=f().locator('#grid .tile').filter({hasText:new RegExp("^"+word+"$")});
  await tile.focus();
  await page.keyboard.press("Space");
+ assert.match(await f().locator("#selection-guide").innerText(),/1 of 4 selected/,"Winnow explains selection progress");
  assert.equal(await tile.getAttribute("aria-pressed"),"true","Winnow announces selection");
  assert.equal(await tile.evaluate(el=>document.activeElement===el),true,"Winnow restores focus after re-render");
  await back();
@@ -77,6 +79,7 @@ try{
  const keyboardCell=f().locator('#board .cell[data-r="'+editableCell.r+'"][data-c="'+editableCell.c+'"]');
  await keyboardCell.focus();
  await page.keyboard.press("Enter");
+ assert.match(await f().locator("#constraint-guide").innerText(),/no visible rule conflicts/,"Reckoner explains current constraints");
  assert.equal(await keyboardCell.getAttribute("aria-pressed"),"true","Reckoner supports keyboard cell selection");
  await back();
  checks.push("Causeway Escape, Winnow focus/selection semantics and Reckoner keyboard selection");
