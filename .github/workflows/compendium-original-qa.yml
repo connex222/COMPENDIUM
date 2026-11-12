@@ -1,0 +1,32 @@
+name: Original Compendium review QA
+# Review-only: the improvement branch is not published or merged.
+on:
+  pull_request:
+    paths:
+      - index.html
+      - qa/**
+      - .github/workflows/compendium-original-qa.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  original-seven:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Verify seven puzzles, source syntax and save isolation
+        run: node qa/verify.mjs
+      - name: Install Chromium test driver (QA only, not shipped)
+        run: npm install --no-save --no-audit --no-fund playwright-core
+      - name: Find Chrome
+        shell: bash
+        run: |
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          test -n "$CHROME"
+          echo "CHROME_BIN=$CHROME" >> "$GITHUB_ENV"
+      - name: Browser smoke, resume and selected full solves
+        run: node qa/browser.mjs
