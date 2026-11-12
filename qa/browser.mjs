@@ -111,6 +111,64 @@ try{
  checks.push("Skein: hint, board selection and state recovery");
  await back();
 
+
+ // Complete Reckoner using actual number pad and board controls after restoring a partial grid.
+ await open("Reckoner");game=await frame();
+ const reck=await game.evaluate(()=>({sol:S.p.sol,grid:S.grid,n:S.p.n,given:S.p.g}));
+ assert.ok(reck?.sol?.length>0,"Reckoner has solution data");
+ for(let r=0;r<reck.n;r++)for(let c=0;c<reck.n;c++){
+  if(reck.given.some(v=>v[0]===r&&v[1]===c)||reck.grid[r][c]===reck.sol[r][c])continue;
+  const cell=f().locator('#board .cell[data-r="'+r+'"][data-c="'+c+'"]');
+  if(await cell.evaluate(el=>el.classList.contains("sel")))await cell.click({force:true});
+  await cell.click({force:true});
+  await f().locator('#pad-row .num[data-v="'+reck.sol[r][c]+'"]').click();
+ }
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem("cmp.v1.reckoner.session")||"null")?.done===true,null,{timeout:15000});
+ await page.reload({waitUntil:"domcontentloaded"});
+ assert.equal((await key("cmp.v1.reckoner.session")).done,true,"Reckoner completion kept after refresh");
+ checks.push("Reckoner: complete board via number pad, verified result and refresh");
+ await back();
+
+ // Complete Skein using pointer drags that follow the in-game word paths.
+ await open("Skein");game=await frame();
+ const trace=await game.evaluate(()=>S.spans.filter(sp=>!S.found.has(sp.w)).map(sp=>sp.cells));
+ assert.ok(trace.length>1,"Skein has unsolved word paths");
+ for(const cells of trace){
+  const centers=[];
+  for(const i of cells){
+   const bounds=await f().locator('#cells .cell[data-i="'+i+'"]').boundingBox();
+   assert.ok(bounds,"Skein cell exists");
+   centers.push({x:bounds.x+bounds.width/2,y:bounds.y+bounds.height/2});
+  }
+  await page.mouse.move(centers[0].x,centers[0].y);
+  await page.mouse.down();
+  for(const p of centers.slice(1))await page.mouse.move(p.x,p.y);
+  await page.mouse.up();
+ }
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem("cmp.v1.skein.session")||"null")?.done===true,null,{timeout:15000});
+ await page.reload({waitUntil:"domcontentloaded"});
+ assert.equal((await key("cmp.v1.skein.session")).done,true);
+ checks.push("Skein: all word paths via real pointer tracing, completed result and reload");
+ await back();
+
+ // Unpick: interrupt an answer and finish through the original on-screen keyboard.
+ await open("Unpick");game=await frame();
+ await f().locator("#p-daily .kb button").first().waitFor({timeout:20000});
+ if(await f().locator("#welcome").evaluate(e=>!e.hidden))await f().locator("#wSkip").click();
+ const unpickAnswer=await game.evaluate(()=>daily.ans);
+ assert.ok(/^[A-Z]+$/.test(unpickAnswer),"Unpick has answer");
+ await f().locator('#p-daily .kb button[data-k="'+unpickAnswer[0]+'"]').click();
+ assert.equal((await key("cmp.v1.unpick.session"))?.daily?.fill?.[0],unpickAnswer[0]);
+ await page.reload({waitUntil:"domcontentloaded"});
+ game=await frame();await f().locator("#p-daily .kb button").first().waitFor({timeout:20000});
+ assert.equal(await game.evaluate(()=>daily.fill[0]),unpickAnswer[0],"Unpick restores answer input");
+ for(const letter of unpickAnswer.slice(1))await f().locator('#p-daily .kb button[data-k="'+letter+'"]').click();
+ await page.waitForFunction(()=>JSON.parse(localStorage.getItem("unpick.v1")||"null")?.solved>=1,null,{timeout:12000});
+ await page.reload({waitUntil:"domcontentloaded"});
+ assert.ok((await key("unpick.v1")).solved>=1);
+ checks.push("Unpick: interrupted answer, real daily solve and existing statistics");
+ await back();
+
  assert.deepEqual((await key("c2.v.fell.state")).d,{sentinel:"DO-NOT-TOUCH"});
  assert.deepEqual(errors,[],"No console page errors in any volume");
  console.log("PASS: "+checks.length+" browser checks\n"+checks.map(x=>"  - "+x).join("\n"));
