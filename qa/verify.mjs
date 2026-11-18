@@ -33,6 +33,9 @@ for(const [name,doc] of Object.entries(docs)){
 }
 assert.equal(compiled,8,"Host and all seven volume scripts compile");
 assert.ok(!/<script[^>]+src\s*=/.test(html),"No external scripts");
+const approvedFullscreen=readFileSync(new URL("../collection-fullscreen.js",import.meta.url),"utf8").trim();
+assert.ok(html.includes(approvedFullscreen),"The approved fullscreen/navigation control must be embedded exactly for single-file offline play");
+new Script(approvedFullscreen,{filename:"approved-fullscreen.js"});
 assert.ok(!/<link[^>]+href\s*=\s*["']https?:\/\//i.test(html),"No remote stylesheet");
 assert.ok(!/\bfetch\s*\(/.test(html),"No fetch dependency");
 
